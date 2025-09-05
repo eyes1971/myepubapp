@@ -7,27 +7,27 @@ from typing import Optional
 
 
 def setup_logger(name: Optional[str] = None) -> logging.Logger:
-    """設定並返回logger實例"""
+    """Setup and return logger instance"""
 
     logger = logging.getLogger(name or __name__)
 
-    # 如果logger已經有處理器，直接返回
+    # If logger already has handlers, return it directly
     if logger.handlers:
         return logger
 
-    # 設定日誌格式
+    # Set log format
     formatter = logging.Formatter(
         '%(asctime)s - %(name)s - %(levelname)s - %(message)s'
     )
 
-    # 添加控制台處理器
+    # Add console handler
     console_handler = logging.StreamHandler()
     console_handler.setFormatter(formatter)
     logger.addHandler(console_handler)
 
-    # 添加檔案處理器 - 使用用戶目錄而不是專案目錄
+    # Add file handler - use user directory instead of project directory
     try:
-        # 獲取用戶應用程式資料目錄
+        # Get user application data directory
         if os.name == 'nt':  # Windows
             app_data = os.environ.get(
                 'APPDATA', Path.home() / 'AppData' / 'Roaming')
@@ -46,11 +46,11 @@ def setup_logger(name: Optional[str] = None) -> logging.Logger:
         logger.addHandler(file_handler)
 
     except (OSError, PermissionError) as e:
-        # 如果無法創建日誌檔案，只使用控制台日誌
-        logger.warning(f"無法創建日誌檔案，將只使用控制台日誌: {e}")
+        # If unable to create log file, use console logging only
+        logger.warning(
+            f"Unable to create log file, using console logging only: {e}")
 
-    # 設定日誌層級
+    # Set log level
     logger.setLevel(logging.INFO)
 
     return logger
-

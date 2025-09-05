@@ -226,10 +226,10 @@ class Book:
             from ..utils.file_handler import FileHandler
             file_handler = FileHandler()
 
-            # 使用 ebooklib 直接讀取現有 EPUB
+            # Use ebooklib to read existing EPUB directly
             existing_book = epub.read_epub(input_epub)
 
-            # 從現有 EPUB 提取中繼資料
+            # Extract metadata from existing EPUB
             title_meta = existing_book.get_metadata('DC', 'title')
             author_meta = existing_book.get_metadata('DC', 'creator')
             lang_meta = existing_book.get_metadata('DC', 'language')
@@ -242,16 +242,16 @@ class Book:
                 identifier=id_meta[0][0] if id_meta else 'unknown-id'
             )
 
-            # 創建新的 Book 實例
+            # Create new Book instance
             new_book = cls(metadata)
-            new_book._epub_book = existing_book  # 使用現有的 EpubBook 物件
+            new_book._epub_book = existing_book  # Use existing EpubBook object
 
-            # 處理新的文本內容
+            # Process new text content
             new_content = file_handler.read_file(new_text_file)
             if new_content:
                 from ..generators.content import ContentGenerator
                 content_generator = ContentGenerator()
-                # 計算現有章節數量
+                # Calculate existing chapter count
                 existing_items = existing_book.get_items()
                 existing_chapter_count = len([
                     item for item in existing_items
@@ -267,7 +267,7 @@ class Book:
                 for chapter in new_chapters:
                     new_book.add_chapter(chapter)
 
-            # 生成新的EPUB文件
+            # Generate new EPUB file
             new_book.generate_epub(output_file)
             logger.info(f"成功合併章節並生成新的EPUB文件: {output_file}")
 
