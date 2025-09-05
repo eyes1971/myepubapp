@@ -1,4 +1,5 @@
 
+
 from dataclasses import dataclass
 from ebooklib import epub
 from typing import Optional
@@ -45,13 +46,19 @@ class Chapter:
         # HTML from ContentGenerator
         escaped_title = escape(self.title, quote=False)
 
+        # Handle different level types
+        if self.level == 'intro':
+            title_tag = f'<h1>{escaped_title}</h1>'
+        else:
+            title_tag = f'<{self.level}>{escaped_title}</{self.level}>'
+
         return f"""
         <html xmlns="http://www.w3.org/1999/xhtml">
         <head>
             <title>{escaped_title}</title>
         </head>
         <body>
-            <{self.level}>{escaped_title}</{self.level}>
+            {title_tag}
             {self.content}
         </body>
         </html>

@@ -1,3 +1,4 @@
+
 """
 MyEPUBApp
 =========
@@ -15,3 +16,4 @@ logger = setup_logger()
 
 __version__ = '1.0.0'
 __author__ = 'MyEPUBApp Developer'
+

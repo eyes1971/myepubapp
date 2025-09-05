@@ -1,4 +1,5 @@
 
+
 class EPUBError(Exception):
     """Base exception class for EPUB processing"""
     pass
@@ -32,3 +33,4 @@ class FileHandlerError(EPUBError):
 class TextProcessingError(EPUBError):
     """Exception for text processing"""
     pass
+

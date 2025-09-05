@@ -1,4 +1,5 @@
 
+
 import argparse
 from pathlib import Path
 from typing import Optional
@@ -67,7 +68,8 @@ def initialize_epub(input_file: str, output_epub: str, convert_tags: bool = Fals
         if cover_path:
             book.add_cover(cover_path)
 
-        file_handler.write_epub(output_epub, book)
+        # Generate EPUB structure (TOC, nav, spine)
+        book.generate_epub(output_epub)
         logger.info(
             f"EPUB file '{output_epub}' generated successfully.")
 

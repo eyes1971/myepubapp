@@ -1,4 +1,5 @@
 
+
 from pathlib import Path
 from typing import Optional
 from ..exceptions.epub_exceptions import FileHandlerError
@@ -40,3 +41,4 @@ class FileHandler:
     def ensure_directory(file_path: str) -> None:
         """Ensure target directory exists"""
         Path(file_path).parent.mkdir(parents=True, exist_ok=True)
+

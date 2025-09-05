@@ -1,4 +1,3 @@
-
 from dataclasses import dataclass, field
 from typing import List, Optional
 from pathlib import Path
@@ -91,18 +90,14 @@ class Book:
         except Exception as e:
             logger.error(f"Error adding cover image: {e}")
 
-    def get_spine(self) -> List[str]:
-        """Get book's spine structure"""
-        return ['nav'] + [ch.chapter_id for ch in self.chapters]
-
     def generate_epub(self, output_path: str) -> None:
         """Generate final EPUB file"""
         try:
             # Add TOC and navigation
             self._add_toc_and_nav()
 
-            # Set spine
-            self._epub_book.spine = self.get_spine()
+            # Set spine with proper structure
+            self._set_spine()
 
             # Write EPUB file
             epub.write_epub(output_path, self._epub_book, {})
@@ -115,8 +110,27 @@ class Book:
         """Add table of contents and navigation to EPUB"""
         from ..generators.toc import TOCGenerator
         toc_generator = TOCGenerator()
+
+        # Check if there's an introduction chapter
+        has_intro = any(chapter.level == 'intro' for chapter in self.chapters)
+
+        # If no introduction, add a default one
+        if not has_intro:
+            intro_chapter = Chapter(
+                title='Introduction',
+                content='<p>This book has no introduction.</p>',
+                level='intro',
+                file_name='intro.xhtml',
+                chapter_id='intro'
+            )
+            self.chapters.insert(0, intro_chapter)
+            epub_intro = intro_chapter.to_epub_item()
+            self._epub_book.add_item(epub_intro)
+
+        # Generate navigation content
         nav_content = toc_generator.create_nav_content(self.chapters)
 
+        # Create navigation document with proper properties
         nav = epub.EpubHtml(
             title='Table of Contents',
             file_name='nav.xhtml',
@@ -124,17 +138,82 @@ class Book:
         )
         nav.id = 'nav'
         nav.properties.append('nav')
-
         self._epub_book.add_item(nav)
 
-        # Set TOC structure correctly
-        toc_sections = [epub.Section('Table of Contents', href='nav.xhtml')]
+        # Nav content generated successfully
+
+        # Create and add NCX for EPUB2 compatibility (not in spine for EPUB 3)
+        ncx_content = self._generate_ncx_content()
+        ncx = epub.EpubItem(
+            uid="ncx",
+            file_name="toc.ncx",
+            media_type="application/x-dtbncx+xml",
+            content=ncx_content.encode('utf-8')
+        )
+        self._epub_book.add_item(ncx)
+
+        # Set TOC structure for ebooklib
+        toc_sections = []
         for chapter in self.chapters:
             toc_sections.append(epub.Section(
                 chapter.title, href=chapter.file_name))
 
         self._epub_book.toc = toc_sections
-        self._epub_book.add_item(epub.EpubNcx())
+
+    def _set_spine(self):
+        """Set the spine structure properly"""
+        spine_items = []
+
+        # Add navigation to spine
+        spine_items.append('nav')
+
+        # Add all chapters to spine
+        for chapter in self.chapters:
+            spine_items.append(chapter.chapter_id)
+
+        # Set spine (NCX not included in EPUB 3 spine)
+        self._epub_book.spine = spine_items
+
+    def get_spine(self) -> List[str]:
+        """Get book's spine structure"""
+        return self._epub_book.spine
+
+    def _generate_ncx_content(self) -> str:
+        """Generate NCX content manually for EPUB2 compatibility"""
+        ncx_content = [
+            '<?xml version="1.0" encoding="utf-8"?>',
+            '<ncx xmlns="http://www.daisy.org/z3986/2005/ncx/" version="2005-1">',
+            '<head>',
+            f'<meta content="{self.metadata.identifier}" name="dtb:uid"/>',
+            '<meta content="1" name="dtb:depth"/>',
+            '<meta content="0" name="dtb:totalPageCount"/>',
+            '<meta content="0" name="dtb:maxPageNumber"/>',
+            '</head>',
+            '<docTitle>',
+            f'<text>{self.metadata.title}</text>',
+            '</docTitle>',
+            '<navMap>'
+        ]
+
+        # Add navPoints for each chapter
+        for i, chapter in enumerate(self.chapters, 1):
+            ncx_content.append(
+                f'<navPoint id="navpoint-{i}" playOrder="{i}">'
+            )
+            ncx_content.append(
+                f'<navLabel><text>{chapter.title}</text></navLabel>'
+            )
+            ncx_content.append(
+                f'<content src="{chapter.file_name}"/>'
+            )
+            ncx_content.append('</navPoint>')
+
+        ncx_content.extend([
+            '</navMap>',
+            '</ncx>'
+        ])
+
+        return '\n'.join(ncx_content)
 
     @classmethod
     def merge_existing_epub_with_new_chapters(cls,

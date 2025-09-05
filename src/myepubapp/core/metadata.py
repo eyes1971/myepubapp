@@ -1,3 +1,4 @@
+
 from dataclasses import dataclass
 from typing import Optional
 import uuid
@@ -62,3 +63,4 @@ class Metadata:
                 
         except Exception as e:
             raise ValueError(f"從EPUB提取中繼資料時發生錯誤: {e}")
+
