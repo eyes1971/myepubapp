@@ -72,14 +72,16 @@ class TOCGenerator:
                             # Find the actual level of the next chapter and process it
                             actual_next_level = {'h1': 1, 'h2': 2, 'h3': 3, 'intro': 0}[
                                 chapter_list[i + 1].level]
-                            i = build_toc_level(
+                            end_i = build_toc_level(
                                 chapter_list, i + 1, actual_next_level)
                             # Only add closing </ol> if we actually processed children
-                            if i > original_i + 1:
+                            if end_i > original_i + 1:
                                 nav_content.append('                </ol>')
                             else:
                                 # Remove the empty <ol> if no children were processed
                                 nav_content.pop()
+                            # Continue from where the recursion left off
+                            i = end_i - 1  # -1 because i += 1 will happen at the end
 
                         nav_content.append('            </li>')
                         i += 1

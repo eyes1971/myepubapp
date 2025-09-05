@@ -222,16 +222,23 @@ If you encounter any issues or have questions:
 
 ## 📋 Changelog
 
+### Version 1.0.2 (2025-09-05)
+- 🐛 **Fixed**: Critical TOC generation bug causing missing chapters in table of contents
+- 🐛 **Fixed**: TOC only showing first few chapters, skipping subsequent ones in multi-chapter documents
+- 🔧 **Improved**: TOC generator recursive logic now properly handles chapter indexing after processing child elements
+- 🔧 **Improved**: Fixed index management in `build_toc_level()` function to prevent chapter skipping
+- ✅ **Enhanced**: TOC generation now works correctly for any number of chapters and all hierarchy levels
+
 ### Version 1.0.1 (2025-09-05)
 - 🐛 **Fixed**: EPUB TOC generation error when using h2/h3 chapter levels
-- 🐛 **Fixed**: Empty `<ol>` elements in nav.xhtml causing epubcheck validation failures
+- � **Fixed**: Empty `<ol>` elements in nav.xhtml causing epubcheck validation failures
 - 🔧 **Improved**: TOC generator now properly handles all chapter level combinations (h1, h2, h3)
 - 🔧 **Improved**: Automatic level detection for chapters with skipped levels (e.g., intro → h2)
 - ✅ **Enhanced**: EPUB validation compliance for all supported chapter structures
 
 ### Version 1.0.0 (2025-09-01)
 - ✨ Initial release with full text-to-EPUB conversion functionality
-- 📖 Support for Chinese content with automatic title mark conversion
+- �📖 Support for Chinese content with automatic title mark conversion
 - 📑 Intelligent chapter detection using marker symbols
 - 🔄 Flexible operation modes (create new EPUB or append chapters)
 - ✅ Built-in EPUB validation with detailed compliance checking
@@ -240,6 +247,6 @@ If you encounter any issues or have questions:
 
 ---
 
-**Version**: 1.0.1
+**Version**: 1.0.2
 **Author**: Sam Weng
 **Repository**: [https://github.com/eyes1971/myepubapp](https://github.com/eyes1971/myepubapp)
