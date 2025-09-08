@@ -8,12 +8,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [1.0.3] - 2025-09-08
 
 ### Changed
-- Replaced Chinese comments with English comments in source code for better internationalization
-- Cleaned up project directory by removing unused temporary files and test artifacts
-
-### Removed
-- Removed temporary directories: `temp_epub/`, `temp_final/`, `temp_original/`
-- Removed test files: `test_append.txt`, `test_debug.epub`, `test_debug2.epub`, `test_merge.py`, `test_merged.epub`, `test_output.epub`, `test.txt`, `append_content.txt`, `initial_content.txt`
+- This update primarily focuses on optimizing the core `src/myepubapp/core/book.py` module:
+- Updated function documentation: `_extract_chapters_from_epub()` and `merge_existing_epub_with_new_chapters()`
+- Updated log outputs: EPUB merge success and error messages
+- Maintained functionality integrity: All changes are non-breaking, preserving all functional logic
 
 ## [1.0.2] - 2025-09-01
 
