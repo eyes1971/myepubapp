@@ -222,9 +222,10 @@ If you encounter any issues or have questions:
 ## 📋 Changelog
 
 ### Version 1.0.3 (2025-09-08)
-- 🌐 **Internationalization**: Replaced Chinese comments with English comments in source code for better maintainability and global collaboration
-- 🧹 **Cleanup**: Cleaned up project directory by removing unused temporary files and test artifacts
-- 📝 **Documentation**: Added comprehensive CHANGELOG.md file for better version tracking
+- This update primarily focuses on optimizing the core `src/myepubapp/core/book.py` module:
+- Updated function documentation: `_extract_chapters_from_epub()` and `merge_existing_epub_with_new_chapters()`
+- Updated log outputs: EPUB merge success and error messages
+- Maintained functionality integrity: All changes are non-breaking, preserving all functional logic
 
 ### Version 1.0.2 (2025-09-05)
 - 🐛 **Fixed**: Critical TOC generation bug causing missing chapters in table of contents
