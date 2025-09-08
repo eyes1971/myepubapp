@@ -9,7 +9,6 @@ A powerful and flexible text-to-EPUB conversion tool that transforms plain text 
 ## ✨ Features
 
 - 📖 **Text to EPUB Conversion**: Convert plain text files to fully EPUB-compliant e-books
-- 🌏 **Chinese Content Support**: Specially optimized for Chinese content with automatic Chinese book title mark conversion
 - 📑 **Intelligent Chapter Detection**: Automatically identify and split chapters using special marker symbols
 - 🔄 **Flexible Operation Modes**: Support for creating new EPUB files or appending chapters to existing ones
 - ✅ **EPUB Validation**: Built-in EPUB format validation with detailed compliance checking
