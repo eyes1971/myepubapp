@@ -222,6 +222,12 @@ If you encounter any issues or have questions:
 
 ## 📋 Changelog
 
+### Version 1.0.3 (2025-09-08)
+- 🌐 **Internationalization**: Replaced Chinese comments with English comments in source code for better maintainability and global collaboration
+- 🧹 **Cleanup**: Cleaned up project directory by removing unused temporary files and test artifacts
+- 📝 **Documentation**: Added comprehensive CHANGELOG.md file for better version tracking
+- 🔧 **Maintenance**: Removed temporary directories (`temp_epub/`, `temp_final/`, `temp_original/`) and test files for cleaner repository
+
 ### Version 1.0.2 (2025-09-05)
 - 🐛 **Fixed**: Critical TOC generation bug causing missing chapters in table of contents
 - 🐛 **Fixed**: TOC only showing first few chapters, skipping subsequent ones in multi-chapter documents
@@ -247,6 +253,6 @@ If you encounter any issues or have questions:
 
 ---
 
-**Version**: 1.0.2
+**Version**: 1.0.3
 **Author**: Sam Weng
 **Repository**: [https://github.com/eyes1971/myepubapp](https://github.com/eyes1971/myepubapp)
