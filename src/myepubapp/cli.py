@@ -11,7 +11,7 @@ from .utils.file_handler import FileHandler
 from .utils.epub_validator import EPUBValidator
 from .exceptions.epub_exceptions import EPUBError
 
-logger = setup_logger()
+logger = None  # Will be initialized after argument parsing
 
 
 def generate_title_from_filename(input_file: str) -> str:
@@ -118,8 +118,15 @@ Example Input Format:
                         help='Convert <> tags to Chinese book title marks 《》')
     parser.add_argument('--cover', '-c',
                         help='Path to cover image file')
+    parser.add_argument('--debug', '-d',
+                        action='store_true',
+                        help='Enable debug logging')
 
     args = parser.parse_args()
+
+    # Initialize logger after parsing arguments
+    global logger
+    logger = setup_logger(debug=args.debug)
 
     try:
         if args.validate:

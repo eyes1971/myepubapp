@@ -9,7 +9,24 @@ from .metadata import Metadata
 from ..exceptions.epub_exceptions import EPUBError
 from ..utils.logger import setup_logger
 
-logger = setup_logger()
+logger = None  # Will be initialized when needed
+_debug_mode = False  # Class variable to track debug mode
+
+
+def _get_logger():
+    """Get or create logger with current debug mode"""
+    global logger
+    if logger is None:
+        logger = setup_logger(debug=_debug_mode)
+    return logger
+
+
+def set_debug_mode(debug: bool):
+    """Set debug mode for logging"""
+    global _debug_mode, logger
+    _debug_mode = debug
+    # Reset logger so it gets recreated with new debug mode
+    logger = None
 
 
 @dataclass
@@ -44,7 +61,7 @@ class Book:
             from pathlib import Path
             cover_file = Path(cover_path)
             if not cover_file.exists():
-                logger.warning(f"Cover image not found: {cover_path}")
+                _get_logger().warning(f"Cover image not found: {cover_path}")
                 return
 
             # Read cover image
@@ -85,10 +102,10 @@ class Book:
             # Add cover page to book
             self._epub_book.add_item(cover_page)
 
-            logger.info(f"Cover image added: {cover_path}")
+            _get_logger().info(f"Cover image added: {cover_path}")
 
         except Exception as e:
-            logger.error(f"Error adding cover image: {e}")
+            _get_logger().error(f"Error adding cover image: {e}")
 
     def generate_epub(self, output_path: str) -> None:
         """Generate final EPUB file"""
@@ -101,7 +118,8 @@ class Book:
 
             # Write EPUB file
             epub.write_epub(output_path, self._epub_book, {})
-            logger.info(f"Successfully generated EPUB file: {output_path}")
+            _get_logger().info(
+                f"Successfully generated EPUB file: {output_path}")
 
         except Exception as e:
             raise EPUBError(f"Error generating EPUB file: {e}")
@@ -127,7 +145,53 @@ class Book:
             epub_intro = intro_chapter.to_epub_item()
             self._epub_book.add_item(epub_intro)
 
+        # Ensure chapters are in the correct order for EPUB generation
+        # Separate chapters by type and ensure correct order
+        original_chapters = []
+        new_chapters = []
+        intro_chapter = None
+
+        for chapter in self.chapters:
+            if chapter.level == 'intro':
+                intro_chapter = chapter
+            elif chapter.chapter_id and chapter.chapter_id.startswith('chapter_'):
+                # All chapter_xxx are considered original chapters from existing EPUB
+                original_chapters.append(chapter)
+            else:
+                new_chapters.append(chapter)
+
+        # Sort original chapters
+        original_chapters.sort(key=lambda c: c.chapter_id)
+
+        # Reorder self.chapters: intro + original + new (TOC should start with intro, then chapters)
+        self.chapters = []
+        if intro_chapter:
+            self.chapters.append(intro_chapter)
+        self.chapters.extend(original_chapters + new_chapters)
+
+        # Re-add all chapters to the book in the correct order
+        # First, remove existing chapter items to avoid duplicates
+        items_to_remove = []
+        for item in self._epub_book.get_items():
+            if isinstance(item, epub.EpubHtml) and item.file_name.startswith('chapter_'):
+                items_to_remove.append(item)
+            elif isinstance(item, epub.EpubHtml) and item.file_name == 'intro.xhtml':
+                items_to_remove.append(item)
+
+        for item in items_to_remove:
+            self._epub_book.items.remove(item)
+
+        # Re-add chapters in correct order
+        for chapter in self.chapters:
+            epub_chapter = chapter.to_epub_item()
+            self._epub_book.add_item(epub_chapter)
+
         # Generate navigation content
+        _get_logger().debug(
+            f"Generating nav content for {len(self.chapters)} chapters")
+        for i, ch in enumerate(self.chapters):
+            _get_logger().debug(
+                f"Chapter {i}: {ch.title} ({ch.file_name}) - Level: {ch.level}")
         nav_content = toc_generator.create_nav_content(self.chapters)
 
         # Create navigation document with proper properties
@@ -138,6 +202,9 @@ class Book:
         )
         nav.id = 'nav'
         nav.properties.append('nav')
+
+        # Add nav at the end to ensure it's added last
+        # This will affect the order in the EPUB zip file
         self._epub_book.add_item(nav)
 
         # Nav content generated successfully
@@ -167,9 +234,31 @@ class Book:
         # Add navigation to spine
         spine_items.append('nav')
 
-        # Add all chapters to spine
+        # Separate chapters by type and ensure correct order
+        original_chapters = []
+        new_chapters = []
+        intro_chapter = None
+
         for chapter in self.chapters:
-            spine_items.append(chapter.chapter_id)
+            if chapter.level == 'intro':
+                intro_chapter = chapter
+            elif chapter.chapter_id and chapter.chapter_id.startswith('chapter_'):
+                # All chapter_xxx are considered original chapters from existing EPUB
+                original_chapters.append(chapter)
+            else:
+                new_chapters.append(chapter)
+
+        # Sort original chapters
+        original_chapters.sort(key=lambda c: c.chapter_id)
+
+        # Add chapters in correct order: original + new + intro
+        for chapter in original_chapters + new_chapters:
+            if chapter.chapter_id and chapter.chapter_id != 'nav':
+                spine_items.append(chapter.chapter_id)
+
+        # Add intro at the end
+        if intro_chapter and intro_chapter.chapter_id:
+            spine_items.append(intro_chapter.chapter_id)
 
         # Set spine (NCX not included in EPUB 3 spine)
         self._epub_book.spine = spine_items
@@ -215,13 +304,107 @@ class Book:
 
         return '\n'.join(ncx_content)
 
+    def _extract_chapters_from_epub(self, existing_book: epub.EpubBook) -> List[Chapter]:
+        """Extract chapters from existing EPUB"""
+        chapters = []
+        seen_files = set()  # Track files we've already processed
+
+        # Get all items from existing EPUB
+        items = existing_book.get_items()
+
+        for item in items:
+            if isinstance(item, epub.EpubHtml) and item.file_name.endswith('.xhtml'):
+                # Skip navigation and cover pages
+                if item.file_name in ['nav.xhtml', 'cover.xhtml']:
+                    continue
+
+                # Skip if we've already processed this file
+                if item.file_name in seen_files:
+                    continue
+                seen_files.add(item.file_name)
+
+                try:
+                    # Parse HTML content to extract title and content
+                    soup = BeautifulSoup(item.content, 'html.parser')
+
+                    # Extract title from the first heading tag
+                    title = item.title or "Unknown Title"
+                    heading = soup.find(['h1', 'h2', 'h3'])
+                    if heading:
+                        title = heading.get_text().strip()
+
+                    # Remove the title from content (first heading)
+                    if heading:
+                        heading.extract()
+
+                    # Get the remaining content
+                    content = str(soup.body) if soup.body else str(soup)
+
+                    # Determine level based on filename or heading tag
+                    level = 'h1'  # default
+                    if item.file_name == 'intro.xhtml':
+                        level = 'intro'
+                    elif heading and heading.name in ['h2', 'h3']:
+                        level = heading.name
+                    elif 'sub' in item.file_name.lower() or item.file_name.count('_') > 1:
+                        level = 'h2'  # Assume subsections are h2
+
+                    # Create chapter object
+                    chapter = Chapter(
+                        title=title,
+                        content=content,
+                        level=level,
+                        file_name=item.file_name,
+                        chapter_id=item.id
+                    )
+                    chapters.append(chapter)
+
+                except Exception as e:
+                    _get_logger().warning(
+                        f"Error extracting chapter from {item.file_name}: {e}")
+                    continue
+
+        # Separate chapters by type and sort appropriately
+        spine_order = existing_book.spine
+        original_chapters = []
+        new_chapters = []
+        intro_chapter = None
+
+        for chapter in chapters:
+            if chapter.level == 'intro':
+                intro_chapter = chapter
+            elif chapter.chapter_id and chapter.chapter_id.startswith('chapter_'):
+                # All chapter_xxx are considered original chapters from existing EPUB
+                original_chapters.append(chapter)
+            else:
+                new_chapters.append(chapter)
+
+        # Sort original chapters by their spine order (excluding intro)
+        if original_chapters:
+            try:
+                # spine_order is a list of tuples (id, linear), extract just the ids
+                spine_ids = [item[0] for item in spine_order]
+                original_chapters.sort(
+                    key=lambda c: spine_ids.index(c.chapter_id))
+            except (ValueError, IndexError) as e:
+                _get_logger().warning(
+                    f"Could not sort by spine order: {e}, sorting by chapter_id instead")
+                original_chapters.sort(key=lambda c: c.chapter_id)
+
+        # Combine: original chapters (excluding intro) + new chapters + intro
+        chapters = original_chapters + new_chapters
+        if intro_chapter:
+            chapters.append(intro_chapter)
+
+        return chapters
+
     @classmethod
     def merge_existing_epub_with_new_chapters(cls,
                                               input_epub: str,
                                               new_text_file: str,
                                               output_file: str,
                                               convert_tags: bool = False) -> None:
-        """合併新章節到現有的EPUB文件中"""
+        """Merge new chapters into existing EPUB file"""
         try:
             from ..utils.file_handler import FileHandler
             file_handler = FileHandler()
@@ -246,17 +429,39 @@ class Book:
             new_book = cls(metadata)
             new_book._epub_book = existing_book  # Use existing EpubBook object
 
+            # Remove existing nav and ncx items to avoid duplicates
+            items_to_remove = []
+            for item in existing_book.get_items():
+                if (isinstance(item, epub.EpubHtml) and item.file_name == 'nav.xhtml') or \
+                   (isinstance(item, epub.EpubItem) and item.file_name == 'toc.ncx'):
+                    items_to_remove.append(item)
+
+            for item in items_to_remove:
+                existing_book.items.remove(item)
+
+            # Update spine to remove nav and ncx references
+            updated_spine = []
+            for spine_item in existing_book.spine:
+                if spine_item not in ['nav', 'ncx']:
+                    updated_spine.append(spine_item)
+            existing_book.spine = updated_spine
+            _get_logger().debug(
+                f"Updated spine after removing nav/ncx: {existing_book.spine}")
+
+            # Extract existing chapters from EPUB
+            existing_chapters = new_book._extract_chapters_from_epub(
+                existing_book)
+            new_book.chapters = existing_chapters
+
             # Process new text content
             new_content = file_handler.read_file(new_text_file)
             if new_content:
                 from ..generators.content import ContentGenerator
                 content_generator = ContentGenerator()
                 # Calculate existing chapter count
-                existing_items = existing_book.get_items()
                 existing_chapter_count = len([
-                    item for item in existing_items
-                    if isinstance(item, epub.EpubHtml) and
-                    item.file_name.startswith('chapter_')
+                    ch for ch in existing_chapters
+                    if ch.file_name.startswith('chapter_')
                 ])
                 new_chapters = content_generator.generate_chapters(
                     new_content,
@@ -269,7 +474,8 @@ class Book:
 
             # Generate new EPUB file
             new_book.generate_epub(output_file)
-            logger.info(f"成功合併章節並生成新的EPUB文件: {output_file}")
+            _get_logger().info(
+                f"Successfully merged chapters and generated new EPUB file: {output_file}")
 
         except Exception as e:
-            raise EPUBError(f"合併EPUB文件時發生錯誤: {e}")
+            raise EPUBError(f"Error occurred while merging EPUB file: {e}")

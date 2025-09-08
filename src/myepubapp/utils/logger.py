@@ -6,7 +6,7 @@ from pathlib import Path
 from typing import Optional
 
 
-def setup_logger(name: Optional[str] = None) -> logging.Logger:
+def setup_logger(name: Optional[str] = None, debug: bool = False) -> logging.Logger:
     """Setup and return logger instance"""
 
     logger = logging.getLogger(name or __name__)
@@ -50,7 +50,10 @@ def setup_logger(name: Optional[str] = None) -> logging.Logger:
         logger.warning(
             f"Unable to create log file, using console logging only: {e}")
 
-    # Set log level
-    logger.setLevel(logging.INFO)
+    # Set log level based on debug flag
+    if debug:
+        logger.setLevel(logging.DEBUG)
+    else:
+        logger.setLevel(logging.INFO)
 
     return logger
