@@ -10,12 +10,16 @@ A powerful and flexible text-to-EPUB conversion tool that transforms plain text 
 
 - 📖 **Text to EPUB Conversion**: Convert plain text files to fully EPUB-compliant e-books
 - 📑 **Intelligent Chapter Detection**: Automatically identify and split chapters using special marker symbols
+- 🎯 **Smart Volume Detection**: Automatic hierarchical TOC generation based on chapter level combinations
+  - Detects h1+h2 pattern and makes h1 chapters into volumes
+  - Detects h2+h3 pattern and makes h2 chapters into volumes
+  - Detects h1+h3 pattern and makes h1 chapters into volumes
 - 🔄 **Flexible Operation Modes**: Support for creating new EPUB files or appending chapters to existing ones
 - ✅ **EPUB Validation**: Built-in EPUB format validation with detailed compliance checking
 - 🏗️ **Modular Architecture**: Clean, maintainable code structure for easy extension
 - 📝 **Comprehensive Logging**: Detailed operation logging with configurable log levels
 - 🎨 **Cover Image Support**: Add custom cover images to your EPUB files
-- 📋 **Table of Contents**: Automatic generation of navigation and table of contents
+- 📋 **Table of Contents**: Automatic generation of navigation and table of contents with hierarchical structure
 
 ## 🚀 Installation
 
@@ -221,6 +225,29 @@ If you encounter any issues or have questions:
 
 ## 📋 Changelog
 
+### Version 1.0.4 (2025-09-08)
+- ✨ **Added Smart Volume Detection**: Automatic hierarchical TOC generation based on chapter level combinations
+  - Detects h1+h2 pattern and makes h1 chapters into volumes
+  - Detects h2+h3 pattern and makes h2 chapters into volumes
+  - Detects h1+h3 pattern and makes h1 chapters into volumes
+- 🎯 **Added Intelligent TOC Structure**: Creates nested table of contents for multi-volume books
+- 📖 **Enhanced Chapter Processing**: Improved chapter ordering and Introduction page positioning
+- 🐛 **Fixed Critical EPUB Generation Errors**: Resolved multiple epubcheck validation failures
+  - Fixed duplicate cover image entries in manifest
+  - Fixed undefined cover property errors
+  - Fixed duplicate "cover" IDs causing OPF validation errors
+- 🔧 **Fixed TOC Reading Order Issues**: Fixed NAV-011 warnings about TOC link order mismatch
+  - TOC links now match spine reading order
+  - Proper EPUB 3.0 compliance for navigation structure
+- 📋 **Fixed Cover Image Handling**: Resolved cover image declaration and property issues
+  - Fixed RSC-008 error: Referenced resource not declared in OPF manifest
+  - Fixed OPF-027 error: Undefined property "cover"
+  - Fixed RSC-005 error: Duplicate entries in ZIP file
+- 📖 **Fixed Introduction Page Ordering**: Fixed Introduction page appearing at the end instead of beginning
+  - Proper spine ordering: nav → intro → chapters
+  - Correct TOC positioning for introduction content
+- ✅ **Enhanced EPUB 3.0 Compliance**: All generated EPUB files now pass epubcheck validation
+
 ### Version 1.0.3 (2025-09-08)
 - This update primarily focuses on optimizing the core `src/myepubapp/core/book.py` module:
 - Updated function documentation: `_extract_chapters_from_epub()` and `merge_existing_epub_with_new_chapters()`
@@ -252,6 +279,6 @@ If you encounter any issues or have questions:
 
 ---
 
-**Version**: 1.0.3
+**Version**: 1.0.4
 **Author**: Sam Weng
 **Repository**: [https://github.com/eyes1971/myepubapp](https://github.com/eyes1971/myepubapp)

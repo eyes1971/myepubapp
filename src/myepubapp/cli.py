@@ -85,6 +85,7 @@ def main():
         epilog="""
 Symbol Guide for Input Files:
   ※☆ Introduction page (creates separate intro page)
+  ※VOL Volume title (creates hierarchical TOC structure)
   ※ⅰ Level 1 chapter (h1)
   ※ⅱ Level 2 chapter (h2)
   ※ⅲ Level 3 chapter (h3)
@@ -93,11 +94,16 @@ Example Input Format:
   ※☆ Book Introduction
   This is the introduction content...
 
+  ※VOL 第一卷：开端
   ※ⅰ Chapter 1 Title
   Chapter content here...
 
   ※ⅱ Chapter 1 Section 1
   Subsection content...
+
+  ※VOL 第二卷：发展
+  ※ⅰ Chapter 21 Title
+  More chapter content...
         """,
         formatter_class=argparse.RawDescriptionHelpFormatter
     )

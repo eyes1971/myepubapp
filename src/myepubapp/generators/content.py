@@ -30,37 +30,48 @@ class ContentGenerator:
     def _split_into_chapters(self, content: str) -> List[Dict]:
         """Split content into chapters"""
         chapters = []
-        chapter_splits = re.split(r'(※ⅰ|※ⅱ|※ⅲ|※☆)', content)
+        current_volume = None
+
+        # Split by all markers including volume marker
+        chapter_splits = re.split(r'(※ⅰ|※ⅱ|※ⅲ|※☆|※VOL)', content)
 
         i = 1
         while i < len(chapter_splits):
-            level_symbol = chapter_splits[i].strip()
-            chapter_content = chapter_splits[i + 1].strip()
+            marker = chapter_splits[i].strip()
+            content_part = chapter_splits[i + 1].strip()
+
+            if marker == '※VOL':
+                # Volume marker: extract volume title
+                current_volume = content_part.strip()
+                i += 2
+                continue
 
             level_map = {
                 '※ⅰ': 'h1',
                 '※ⅱ': 'h2',
                 '※ⅲ': 'h3',
-                '※☆': 'intro'  # New intro symbol
+                '※☆': 'intro'
             }
 
-            if level_symbol in level_map:
-                if level_symbol == '※☆':
+            if marker in level_map:
+                if marker == '※☆':
                     # Intro page: entire content as introduction
                     chapters.append({
                         'title': 'Introduction',
-                        'content': chapter_content.strip(),
-                        'level': 'intro'
+                        'content': content_part.strip(),
+                        'level': 'intro',
+                        'volume': current_volume
                     })
                 else:
                     # Regular chapter: first line as title, rest as content
-                    title, *content_parts = chapter_content.split('\n', 1)
+                    title, *content_parts = content_part.split('\n', 1)
                     body = content_parts[0] if content_parts else ''
 
                     chapters.append({
                         'title': title.strip(),
                         'content': body.strip(),
-                        'level': level_map[level_symbol]
+                        'level': level_map[marker],
+                        'volume': current_volume
                     })
 
             i += 2
@@ -81,6 +92,6 @@ class ContentGenerator:
             content=content,
             level=chapter_data['level'],
             file_name=file_name,
-            chapter_id=f"chapter_{index:03d}"
+            chapter_id=f"chapter_{index:03d}",
+            volume=chapter_data.get('volume')
         )
-

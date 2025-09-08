@@ -91,12 +91,66 @@ class TOCGenerator:
 
                 return i
 
-            # Process all chapters starting from the first one
-            # Find the minimum level in the chapters
+            # Process all chapters in their current order (which should match spine order)
             if chapters:
-                min_level = min({'h1': 1, 'h2': 2, 'h3': 3, 'intro': 0}[
-                                ch.level] for ch in chapters)
-                build_toc_level(chapters, 0, min_level)
+                # Analyze chapter levels to determine hierarchical structure
+                level_counts = {}
+                for chapter in chapters:
+                    level = chapter.level
+                    level_counts[level] = level_counts.get(level, 0) + 1
+
+                # Determine volume level based on level combinations
+                volume_level = None
+                if 'h1' in level_counts and 'h2' in level_counts:
+                    volume_level = 'h1'  # h1 becomes volume
+                elif 'h2' in level_counts and 'h3' in level_counts:
+                    volume_level = 'h2'  # h2 becomes volume
+                elif 'h1' in level_counts and 'h3' in level_counts:
+                    volume_level = 'h1'  # h1 becomes volume
+
+                if volume_level:
+                    # Create hierarchical TOC based on detected volume level
+                    current_volume = None
+                    volume_chapters = []
+
+                    for chapter in chapters:
+                        if chapter.level == volume_level:
+                            # This is a volume/chapter separator
+                            if current_volume and volume_chapters:
+                                # Add previous volume
+                                nav_content.append(
+                                    f'            <li><span>{current_volume.title}</span>'
+                                )
+                                nav_content.append('                <ol>')
+                                for vol_chapter in volume_chapters:
+                                    nav_content.append(
+                                        f'                    <li><a href="{vol_chapter.file_name}">{vol_chapter.title}</a></li>')
+                                nav_content.append('                </ol>')
+                                nav_content.append('            </li>')
+
+                            # Start new volume
+                            current_volume = chapter
+                            volume_chapters = []
+                        elif current_volume and chapter.level != volume_level:
+                            # This is a sub-chapter of current volume
+                            volume_chapters.append(chapter)
+
+                    # Add last volume if exists
+                    if current_volume and volume_chapters:
+                        nav_content.append(
+                            f'            <li><span>{current_volume.title}</span>'
+                        )
+                        nav_content.append('                <ol>')
+                        for vol_chapter in volume_chapters:
+                            nav_content.append(
+                                f'                    <li><a href="{vol_chapter.file_name}">{vol_chapter.title}</a></li>')
+                        nav_content.append('                </ol>')
+                        nav_content.append('            </li>')
+                else:
+                    # No hierarchical structure detected, use flat TOC
+                    for chapter in chapters:
+                        nav_content.append(
+                            f'            <li><a href="{chapter.file_name}">{chapter.title}</a></li>')
 
             nav_content.extend([
                 '        </ol>',

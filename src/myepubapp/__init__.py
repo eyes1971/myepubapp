@@ -14,6 +14,5 @@ from .utils.logger import setup_logger
 # Setup default logger
 logger = setup_logger()
 
-__version__ = '1.0.0'
+__version__ = '1.0.4'
 __author__ = 'MyEPUBApp Developer'
-

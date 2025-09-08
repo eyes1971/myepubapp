@@ -68,39 +68,9 @@ class Book:
             with cover_file.open('rb') as f:
                 cover_content = f.read()
 
-            # Create cover image item
-            cover_image = epub.EpubItem(
-                uid="cover",
-                file_name="images/cover" + cover_file.suffix,
-                media_type=f"image/{cover_file.suffix[1:]}",
-                content=cover_content
-            )
-
-            # Add cover image to book
-            self._epub_book.add_item(cover_image)
-
-            # Create cover page
-            cover_page = epub.EpubHtml(
-                title="Cover",
-                file_name="cover.xhtml",
-                content=f"""
-                <html xmlns="http://www.w3.org/1999/xhtml">
-                <head>
-                    <title>Cover</title>
-                </head>
-                <body>
-                    <div style="text-align: center; page-break-after: always;">
-                        <img src="images/cover{cover_file.suffix}" alt="Cover" style="max-width: 100%; height: auto;" />
-                    </div>
-                </body>
-                </html>
-                """
-            )
-            cover_page.id = "cover"
-            cover_page.properties.append("cover")
-
-            # Add cover page to book
-            self._epub_book.add_item(cover_page)
+            # Use ebooklib's set_cover method which handles everything properly
+            self._epub_book.set_cover(
+                "images/cover" + cover_file.suffix, cover_content)
 
             _get_logger().info(f"Cover image added: {cover_path}")
 
@@ -163,7 +133,7 @@ class Book:
         # Sort original chapters
         original_chapters.sort(key=lambda c: c.chapter_id)
 
-        # Reorder self.chapters: intro + original + new (TOC should start with intro, then chapters)
+        # Reorder self.chapters to match spine order: nav, intro, original + new
         self.chapters = []
         if intro_chapter:
             self.chapters.append(intro_chapter)
@@ -251,14 +221,14 @@ class Book:
         # Sort original chapters
         original_chapters.sort(key=lambda c: c.chapter_id)
 
-        # Add chapters in correct order: original + new + intro
+        # Add intro first
+        if intro_chapter and intro_chapter.chapter_id:
+            spine_items.append(intro_chapter.chapter_id)
+
+        # Add chapters in correct order: original + new
         for chapter in original_chapters + new_chapters:
             if chapter.chapter_id and chapter.chapter_id != 'nav':
                 spine_items.append(chapter.chapter_id)
-
-        # Add intro at the end
-        if intro_chapter and intro_chapter.chapter_id:
-            spine_items.append(intro_chapter.chapter_id)
 
         # Set spine (NCX not included in EPUB 3 spine)
         self._epub_book.spine = spine_items

@@ -17,6 +17,7 @@ class Chapter:
     level: str  # h1, h2, h3, intro
     file_name: str
     chapter_id: Optional[str] = None
+    volume: Optional[str] = None  # Volume name for hierarchical TOC
 
     def __post_init__(self):
         """Post-initialization processing"""
