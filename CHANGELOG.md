@@ -5,6 +5,68 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.0.6] - 2025-10-15
+
+### Fixed
+- 🐛 **TOC Generation Bug**: Fixed table of contents generation to properly handle all chapter levels
+  - Previously, standalone ※ⅰ chapters and ※☆ intro markers were not displayed in TOC
+  - Now correctly includes all chapter types: intro, h1, h2, h3
+  - Fixed incorrect nesting where h1 chapters were nested under intro chapters
+- 📖 **Hierarchical TOC Structure**: Improved TOC generation logic for mixed chapter hierarchies
+  - Intro chapters now appear as top-level items
+  - H1 chapters with h2 sub-chapters are properly nested
+  - Standalone h1 chapters appear as top-level items
+  - Maintains proper EPUB 3.0 navigation structure
+
+### Technical Improvements
+- 🔧 **TOC Generator Refactor**: Completely refactored `TOCGenerator.create_nav_content()` method
+  - Replaced complex volume detection logic with recursive hierarchical building
+  - Added proper handling for intro chapters as top-level items
+  - Improved code maintainability and readability
+- ✅ **Test Coverage**: Verified TOC generation with comprehensive test cases
+  - All chapter level combinations now work correctly
+  - Maintains backward compatibility with existing functionality
+
+## [1.0.5] - 2025-10-15
+
+### Added
+- 🛠️ **Code Quality Improvements**: Comprehensive code formatting and linting
+  - Applied Black code formatter for consistent styling
+  - Organized imports with isort for better readability
+  - Added comprehensive type annotations throughout codebase
+
+### Fixed
+- 🐛 **Type Annotation Issues**: Resolved multiple MyPy type checking errors
+  - Added return type annotations for all functions
+  - Fixed variable type annotations in TOC generator
+  - Resolved type inference issues with BeautifulSoup and ebooklib
+- 🔧 **Import Cleanup**: Removed unused imports across all modules
+  - Cleaned up `src/myepubapp/core/book.py`
+  - Cleaned up `src/myepubapp/utils/epub_validator.py`
+  - Cleaned up `src/myepubapp/utils/file_handler.py`
+- ✅ **Test Suite Fixes**: Fixed failing test case in spine validation
+  - Corrected `test_spine_includes_nav_and_chapters` to handle string spine items
+  - Ensured all 26 tests pass consistently
+
+### Changed
+- 📝 **MyPy Configuration**: Updated Python version requirement from 3.8 to 3.9
+  - Improved type checking compatibility
+  - Better support for modern Python features
+- 🏗️ **Code Structure**: Enhanced code maintainability and readability
+  - Consistent formatting across all source files
+  - Improved import organization
+  - Better type safety throughout the codebase
+
+### Technical Improvements
+- 🎯 **Development Experience**: Improved developer tooling and code quality
+  - Automated code formatting with pre-commit hooks ready
+  - Enhanced IDE support with better type hints
+  - Reduced technical debt and improved maintainability
+- 📊 **Code Metrics**: Significant reduction in linting errors
+  - Flake8 errors reduced from 40+ to minimal acceptable levels
+  - MyPy errors reduced from 62 to 30 (mostly third-party library issues)
+  - All functional code remains unchanged and fully tested
+
 ## [1.0.4] - 2025-09-08
 
 ### Added

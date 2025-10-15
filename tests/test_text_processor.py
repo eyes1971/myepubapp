@@ -14,8 +14,7 @@ class TestTextProcessor:
 
         formatted = TextProcessor.format_paragraphs(text)
 
-        expected = ("<p>第一段內容。</p>\n<p>第二段內容。</p>\n"
-                    "<p>第三段內容。</p>")
+        expected = "<p>第一段內容。</p>\n<p>第二段內容。</p>\n" "<p>第三段內容。</p>"
         assert formatted == expected
 
     def test_format_paragraphs_empty_lines(self):
@@ -55,7 +54,7 @@ class TestTextProcessor:
 
     def test_clean_text_special_characters(self):
         """Test text cleaning with special characters"""
-        text = "測試\x00文\x01本\x7F"
+        text = "測試\x00文\x01本\x7f"
         cleaned = TextProcessor.clean_text(text)
 
         assert cleaned == "測試文本"

@@ -1,5 +1,6 @@
-import tempfile
 import os
+import tempfile
+
 from src.myepubapp.core.book import Book
 from src.myepubapp.core.metadata import Metadata
 from src.myepubapp.generators.content import ContentGenerator
@@ -12,10 +13,7 @@ class TestBook:
     def setup_method(self):
         """Setup for each test method"""
         self.metadata = Metadata(
-            title="Test Book",
-            author="Test Author",
-            language="zh",
-            identifier="test-id"
+            title="Test Book", author="Test Author", language="zh", identifier="test-id"
         )
 
     def test_add_default_intro_when_no_intro(self):
@@ -35,18 +33,20 @@ class TestBook:
             book.add_chapter(chapter)
 
         # Check that no intro exists initially
-        assert not any(ch.level == 'intro' for ch in book.chapters)
+        assert not any(ch.level == "intro" for ch in book.chapters)
 
         # Generate EPUB (this calls _add_toc_and_nav internally)
-        with tempfile.NamedTemporaryFile(suffix='.epub', delete=False) as tmp:
+        with tempfile.NamedTemporaryFile(suffix=".epub", delete=False) as tmp:
             try:
                 book.generate_epub(tmp.name)
 
                 # Check that intro was added
-                assert any(ch.level == 'intro' for ch in book.chapters)
-                assert book.chapters[0].level == 'intro'
-                assert book.chapters[0].title == 'Introduction'
-                assert '<p>This book has no introduction.</p>' in book.chapters[0].content
+                assert any(ch.level == "intro" for ch in book.chapters)
+                assert book.chapters[0].level == "intro"
+                assert book.chapters[0].title == "Introduction"
+                assert (
+                    "<p>This book has no introduction.</p>" in book.chapters[0].content
+                )
 
             finally:
                 if os.path.exists(tmp.name):
@@ -69,19 +69,19 @@ class TestBook:
             book.add_chapter(chapter)
 
         # Check that no intro exists initially
-        assert not any(ch.level == 'intro' for ch in book.chapters)
+        assert not any(ch.level == "intro" for ch in book.chapters)
         # All should be h3
-        assert all(ch.level == 'h3' for ch in book.chapters)
+        assert all(ch.level == "h3" for ch in book.chapters)
 
         # Generate EPUB (this calls _add_toc_and_nav internally)
-        with tempfile.NamedTemporaryFile(suffix='.epub', delete=False) as tmp:
+        with tempfile.NamedTemporaryFile(suffix=".epub", delete=False) as tmp:
             try:
                 book.generate_epub(tmp.name)
 
                 # Check that intro was added
-                assert any(ch.level == 'intro' for ch in book.chapters)
-                assert book.chapters[0].level == 'intro'
-                assert book.chapters[0].title == 'Introduction'
+                assert any(ch.level == "intro" for ch in book.chapters)
+                assert book.chapters[0].level == "intro"
+                assert book.chapters[0].title == "Introduction"
 
                 # Check spine includes intro + nav + chapters
                 spine = book.get_spine()
@@ -108,7 +108,7 @@ class TestBook:
             book.add_chapter(chapter)
 
         # Generate EPUB
-        with tempfile.NamedTemporaryFile(suffix='.epub', delete=False) as tmp:
+        with tempfile.NamedTemporaryFile(suffix=".epub", delete=False) as tmp:
             try:
                 book.generate_epub(tmp.name)
 
@@ -117,15 +117,21 @@ class TestBook:
                 results = validator.validate_epub(tmp.name)
 
                 # Check basic compliance
-                assert results['is_valid'], f"EPUB validation failed: {results['errors']}"
-                assert results['version'] == '3.0', f"Expected EPUB 3.0, got {results['version']}"
+                assert results[
+                    "is_valid"
+                ], f"EPUB validation failed: {results['errors']}"
+                assert (
+                    results["version"] == "3.0"
+                ), f"Expected EPUB 3.0, got {results['version']}"
 
                 # Check that NCX exists in manifest
                 # Note: EPUB 3 doesn't require NCX, but our implementation includes it for compatibility
-                ncx_items = [item for item in book._epub_book.get_items(
-                ) if hasattr(item, 'id') and item.id == 'ncx']
-                assert len(
-                    ncx_items) == 1, "NCX should be present with correct ID"
+                ncx_items = [
+                    item
+                    for item in book._epub_book.get_items()
+                    if hasattr(item, "id") and item.id == "ncx"
+                ]
+                assert len(ncx_items) == 1, "NCX should be present with correct ID"
 
             finally:
                 if os.path.exists(tmp.name):
@@ -145,15 +151,18 @@ class TestBook:
             book.add_chapter(chapter)
 
         # Generate EPUB
-        with tempfile.NamedTemporaryFile(suffix='.epub', delete=False) as tmp:
+        with tempfile.NamedTemporaryFile(suffix=".epub", delete=False) as tmp:
             try:
                 book.generate_epub(tmp.name)
 
                 # Check NCX ID
-                ncx_items = [item for item in book._epub_book.get_items(
-                ) if hasattr(item, 'id') and item.id == 'ncx']
+                ncx_items = [
+                    item
+                    for item in book._epub_book.get_items()
+                    if hasattr(item, "id") and item.id == "ncx"
+                ]
                 assert len(ncx_items) == 1
-                assert ncx_items[0].id == 'ncx'
+                assert ncx_items[0].id == "ncx"
 
             finally:
                 if os.path.exists(tmp.name):
@@ -176,16 +185,16 @@ class TestBook:
             book.add_chapter(chapter)
 
         # Generate EPUB to trigger _add_toc_and_nav
-        with tempfile.NamedTemporaryFile(suffix='.epub', delete=False) as tmp:
+        with tempfile.NamedTemporaryFile(suffix=".epub", delete=False) as tmp:
             try:
                 book.generate_epub(tmp.name)
 
                 spine = book.get_spine()
                 assert len(spine) == 4  # nav + intro + 2 chapters
-                assert spine[0].id == 'nav'  # Nav item
-                assert spine[1].id == 'intro'  # Default intro added
-                assert spine[2].id == 'chapter_001'
-                assert spine[3].id == 'chapter_002'
+                assert spine[0] == "nav"  # Nav item
+                assert spine[1] == "intro"  # Default intro added
+                assert spine[2] == "chapter_001"
+                assert spine[3] == "chapter_002"
 
             finally:
                 if os.path.exists(tmp.name):

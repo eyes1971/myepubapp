@@ -1,5 +1,3 @@
-
-
 import logging
 import os
 from pathlib import Path
@@ -17,7 +15,7 @@ def setup_logger(name: Optional[str] = None, debug: bool = False) -> logging.Log
 
     # Set log format
     formatter = logging.Formatter(
-        '%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+        "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
     )
 
     # Add console handler
@@ -28,27 +26,22 @@ def setup_logger(name: Optional[str] = None, debug: bool = False) -> logging.Log
     # Add file handler - use user directory instead of project directory
     try:
         # Get user application data directory
-        if os.name == 'nt':  # Windows
-            app_data = os.environ.get(
-                'APPDATA', Path.home() / 'AppData' / 'Roaming')
-            log_dir = Path(app_data) / 'myepubapp' / 'logs'
+        if os.name == "nt":  # Windows
+            app_data = os.environ.get("APPDATA", Path.home() / "AppData" / "Roaming")
+            log_dir = Path(app_data) / "myepubapp" / "logs"
         else:  # Unix-like systems (Linux, macOS)
-            log_dir = Path.home() / '.local' / 'share' / 'myepubapp' / 'logs'
+            log_dir = Path.home() / ".local" / "share" / "myepubapp" / "logs"
 
         log_dir.mkdir(parents=True, exist_ok=True)
-        log_file = log_dir / 'myepubapp.log'
+        log_file = log_dir / "myepubapp.log"
 
-        file_handler = logging.FileHandler(
-            log_file,
-            encoding='utf-8'
-        )
+        file_handler = logging.FileHandler(log_file, encoding="utf-8")
         file_handler.setFormatter(formatter)
         logger.addHandler(file_handler)
 
     except (OSError, PermissionError) as e:
         # If unable to create log file, use console logging only
-        logger.warning(
-            f"Unable to create log file, using console logging only: {e}")
+        logger.warning(f"Unable to create log file, using console logging only: {e}")
 
     # Set log level based on debug flag
     if debug:
