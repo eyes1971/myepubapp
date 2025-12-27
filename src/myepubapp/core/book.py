@@ -101,22 +101,6 @@ class Book:
 
         toc_generator = TOCGenerator()
 
-        # Check if there's an introduction chapter
-        has_intro = any(chapter.level == "intro" for chapter in self.chapters)
-
-        # If no introduction, add a default one
-        if not has_intro:
-            intro_chapter = Chapter(
-                title="Introduction",
-                content="<p>This book has no introduction.</p>",
-                level="intro",
-                file_name="intro.xhtml",
-                chapter_id="intro",
-            )
-            self.chapters.insert(0, intro_chapter)
-            epub_intro = intro_chapter.to_epub_item()
-            self._epub_book.add_item(epub_intro)
-
         # Ensure chapters are in the correct order for EPUB generation
         # Separate chapters by type and ensure correct order
         original_chapters = []
@@ -446,8 +430,11 @@ class Book:
                         if ch.file_name.startswith("chapter_")
                     ]
                 )
+                # Check if existing EPUB already has introduction
+                has_existing_intro = any(
+                    chapter.level == "intro" for chapter in existing_chapters)
                 new_chapters = content_generator.generate_chapters(
-                    new_content, convert_tags, start_index=existing_chapter_count + 1
+                    new_content, convert_tags, start_index=existing_chapter_count + 1, skip_intro=has_existing_intro
                 )
 
                 for chapter in new_chapters:

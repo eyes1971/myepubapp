@@ -9,14 +9,14 @@ class ContentGenerator:
     """Handles content generation"""
 
     def generate_chapters(
-        self, content: str, convert_tags: bool = False, start_index: int = 1
+        self, content: str, convert_tags: bool = False, start_index: int = 1, skip_intro: bool = False
     ) -> List[Chapter]:
         """Generate chapter list from text content"""
         try:
             if convert_tags:
                 content = self._convert_tags(content)
 
-            chapters_data = self._split_into_chapters(content)
+            chapters_data = self._split_into_chapters(content, skip_intro)
             return [
                 self._create_chapter(data, index)
                 for index, data in enumerate(chapters_data, start=start_index)
@@ -28,7 +28,7 @@ class ContentGenerator:
         """Convert HTML tags to Chinese book title marks"""
         return re.sub(r"<(.*?)>", r"《\1》", content)
 
-    def _split_into_chapters(self, content: str) -> List[Dict]:
+    def _split_into_chapters(self, content: str, skip_intro: bool = False) -> List[Dict]:
         """Split content into chapters"""
         chapters = []
         current_volume = None
@@ -50,7 +50,11 @@ class ContentGenerator:
             level_map = {"※ⅰ": "h1", "※ⅱ": "h2", "※ⅲ": "h3", "※☆": "intro"}
 
             if marker in level_map:
-                if marker == "※☆":
+                if marker == "※☆" and skip_intro:
+                    # Skip introduction if already exists
+                    i += 2
+                    continue
+                elif marker == "※☆":
                     # Intro page: entire content as introduction
                     chapters.append(
                         {

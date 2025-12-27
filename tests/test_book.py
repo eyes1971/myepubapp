@@ -16,8 +16,8 @@ class TestBook:
             title="Test Book", author="Test Author", language="zh", identifier="test-id"
         )
 
-    def test_add_default_intro_when_no_intro(self):
-        """Test that a default introduction is added when no intro exists"""
+    def test_no_default_intro_when_no_intro_marker(self):
+        """Test that no default introduction is added when content has no ※☆ marker"""
         book = Book(self.metadata)
 
         # Create chapters without intro
@@ -40,20 +40,15 @@ class TestBook:
             try:
                 book.generate_epub(tmp.name)
 
-                # Check that intro was added
-                assert any(ch.level == "intro" for ch in book.chapters)
-                assert book.chapters[0].level == "intro"
-                assert book.chapters[0].title == "Introduction"
-                assert (
-                    "<p>This book has no introduction.</p>" in book.chapters[0].content
-                )
+                # Check that no intro was added
+                assert not any(ch.level == "intro" for ch in book.chapters)
 
             finally:
                 if os.path.exists(tmp.name):
                     os.unlink(tmp.name)
 
     def test_only_level3_chapters_no_intro(self):
-        """Test that default intro is added when file has only ※ⅲ chapters"""
+        """Test that no default intro is added when file has only ※ⅲ chapters without ※☆"""
         book = Book(self.metadata)
 
         # Create chapters with only ※ⅲ (level 3)
@@ -78,14 +73,12 @@ class TestBook:
             try:
                 book.generate_epub(tmp.name)
 
-                # Check that intro was added
-                assert any(ch.level == "intro" for ch in book.chapters)
-                assert book.chapters[0].level == "intro"
-                assert book.chapters[0].title == "Introduction"
+                # Check that no intro was added
+                assert not any(ch.level == "intro" for ch in book.chapters)
 
-                # Check spine includes intro + nav + chapters
+                # Check spine includes nav + chapters (no intro)
                 spine = book.get_spine()
-                assert len(spine) == 4  # nav + intro + 2 chapters
+                assert len(spine) == 3  # nav + 2 chapters
 
             finally:
                 if os.path.exists(tmp.name):
@@ -131,7 +124,8 @@ class TestBook:
                     for item in book._epub_book.get_items()
                     if hasattr(item, "id") and item.id == "ncx"
                 ]
-                assert len(ncx_items) == 1, "NCX should be present with correct ID"
+                assert len(
+                    ncx_items) == 1, "NCX should be present with correct ID"
 
             finally:
                 if os.path.exists(tmp.name):
@@ -190,11 +184,10 @@ class TestBook:
                 book.generate_epub(tmp.name)
 
                 spine = book.get_spine()
-                assert len(spine) == 4  # nav + intro + 2 chapters
+                assert len(spine) == 3  # nav + 2 chapters (no intro)
                 assert spine[0] == "nav"  # Nav item
-                assert spine[1] == "intro"  # Default intro added
-                assert spine[2] == "chapter_001"
-                assert spine[3] == "chapter_002"
+                assert spine[1] == "chapter_001"
+                assert spine[2] == "chapter_002"
 
             finally:
                 if os.path.exists(tmp.name):
